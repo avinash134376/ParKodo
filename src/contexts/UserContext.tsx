@@ -1,73 +1,85 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '@/types/user';
+import axios from '@/api/axios';
 
 interface UserContextType {
   user: User | null;
   isAuthenticated: boolean;
-  signIn: (user: User) => void;
+  signIn: (token: string) => Promise<void>;
   signOut: () => void;
-  updateUser: (user: User) => void;
+  updateUser: (user: Partial<User>) => void;
+  isLoading: boolean;
 }
 
-const defaultUser: User = {
-  id: '1',
-  name: 'Rakesh',
-  phone: '1234567890',
-  email: 'Priyanka@Avinash.com',
-  rating: 4.9,
-  bookingCount: 3,
-  memberSince: 'April 2025'
-};
-
-const UserContext = createContext<UserContextType>({
-  user: null,
-  isAuthenticated: false,
-  signIn: () => {},
-  signOut: () => {},
-  updateUser: () => {}
-});
+const UserContext = createContext<UserContextType>({} as UserContextType);
 
 export const useUser = () => useContext(UserContext);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Check if user is already logged in from localStorage
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
-      }
+  const setAuthToken = (token: string | null) => {
+    if (token) {
+      localStorage.setItem('token', token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+    }
+  };
+
+  const fetchUser = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get('/auth/me');
+      setUser(response.data);
+    } catch (error) {
+      setUser(null);
+      setAuthToken(null); // Clear invalid token
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  const signIn = (userData: User) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setAuthToken(token);
+      fetchUser();
+    } else {
+      setIsLoading(false);
+    }
+  }, [fetchUser]);
+
+  const signIn = async (token: string) => {
+    setAuthToken(token);
+    await fetchUser();
   };
 
   const signOut = () => {
     setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('user');
+    setAuthToken(null);
   };
 
-  const updateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+  const updateUser = (updatedUserData: Partial<User>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const newUser = { ...prevUser, ...updatedUserData };
+      return newUser;
+    });
   };
 
   return (
-    <UserContext.Provider value={{ user, isAuthenticated, signIn, signOut, updateUser }}>
+    <UserContext.Provider value={{ 
+      user,
+      isAuthenticated: !!user,
+      signIn,
+      signOut,
+      updateUser,
+      isLoading
+    }}>
       {children}
     </UserContext.Provider>
   );

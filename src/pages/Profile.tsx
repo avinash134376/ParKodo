@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { getInitials } from '@/utils/helpers';
-import Navbar from '@/components/Navbar';
 import EditProfileForm from '@/components/EditProfileForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -31,10 +29,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
-      <div className="container max-w-md mx-auto px-4 pt-20 pb-10">
+    <div className="container max-w-md mx-auto px-4 py-8">
         <div className="flex items-center mb-6">
           <Button 
             variant="ghost" 
@@ -94,13 +89,13 @@ const Profile = () => {
                     <p className="text-muted-foreground">Phone</p>
                     <p className="text-right">{user.phone}</p>
                   </div>
-                  {/* <div className="grid grid-cols-2">
+                  <div className="grid grid-cols-2">
                     <p className="text-muted-foreground">Rating</p>
                     <p className="text-right flex items-center justify-end">
                       <span className="text-yellow-500 mr-1">★</span>
                       {user.rating}
                     </p>
-                  </div> */}
+                  </div>
                   <div className="grid grid-cols-2">
                     <p className="text-muted-foreground">Total Bookings</p>
                     <p className="text-right">{user.bookingCount}</p>
@@ -179,7 +174,6 @@ const Profile = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 

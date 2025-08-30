@@ -1,6 +1,5 @@
 import React from 'react';
-import { Menu, User, Clock, CircleParking, Bookmark } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import {
   Sheet,
   SheetContent,
@@ -8,267 +7,156 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useIsMobile } from '@/hooks/use-mobile';
-import ParkingHistory from './ParkingHistory';
-import SavedParkings from './SavedParkings';
-import { Link, useNavigate } from 'react-router-dom';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Settings, 
+  User, 
+  LayoutDashboard, 
+  LogOut, 
+  LogIn, 
+  UserPlus
+} from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { getInitials } from '@/utils/helpers';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import ParkingHistory from './ParkingHistory';
+import SavedParkings from './SavedParkings';
 import SignInForm from './SignInForm';
-import { useToast } from '@/hooks/use-toast';
+import SignUpForm from './SignUpForm';
 
 const Navbar = () => {
-  const isMobile = useIsMobile();
-  const { user, isAuthenticated, signIn, signOut } = useUser();
-  const [showSignInDialog, setShowSignInDialog] = React.useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  // Reference to the sidebar sheet close button
-  const sidebarCloseRef = React.useRef<HTMLButtonElement>(null);
+  const { user, isAuthenticated, signOut } = useUser();
+  const [isSignInOpen, setIsSignInOpen] = React.useState(false);
+  const [isSignUpOpen, setIsSignUpOpen] = React.useState(false);
 
   const handleSignInSuccess = () => {
-    // Sign in the user with default data
-    signIn({
-      id: '1',
-      name: 'Rakesh',
-      phone: '1234567890',
-      email: 'Priyanka@Avinash.com',
-      rating: 4.9,
-      bookingCount: 3,
-      memberSince: 'April 2025'
-    });
-    
-    setShowSignInDialog(false);
-    toast({
-      title: "Signed in successfully",
-      description: "Welcome back!"
-    });
+    setIsSignInOpen(false);
   };
 
-  const handleSignOut = () => {
-    signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been signed out successfully"
-    });
+  const handleSignUpSuccess = () => {
+    setIsSignUpOpen(false);
   };
-
-  // Function to open the parking history sheet
-  const openParkingHistory = () => {
-    // Close the sidebar first
-    if (sidebarCloseRef.current) {
-      sidebarCloseRef.current.click();
-    }
-    
-    // Small delay to allow the sidebar to close
-    setTimeout(() => {
-      const historyButton = document.querySelector<HTMLButtonElement>('[aria-label="Open parking history"]');
-      if (historyButton) {
-        historyButton.click();
-      }
-    }, 100);
-  };
-  
-  // Function to open the saved parkings sheet
-  const openSavedParkings = () => {
-    // Close the sidebar first
-    if (sidebarCloseRef.current) {
-      sidebarCloseRef.current.click();
-    }
-    
-    // Small delay to allow the sidebar to close
-    setTimeout(() => {
-      const savedButton = document.querySelector<HTMLButtonElement>('[aria-label="Open saved parkings"]');
-      if (savedButton) {
-        savedButton.click();
-      }
-    }, 100);
-  };
-
-  // Create a component for the sheet content
-  const SidebarContent = React.memo(() => {
-    return (
-      <>
-        <SheetHeader className="mb-4">
-          <SheetTitle>Menu</SheetTitle>
-        </SheetHeader>
-        
-        <div className="flex flex-col gap-2">
-          {isAuthenticated ? (
-            <div className="flex items-center p-3 border rounded-lg mb-4 bg-accent/50">
-              <Avatar className="h-12 w-12 mr-3">
-                <AvatarImage src={user?.avatarUrl} />
-                <AvatarFallback className="bg-primary text-white">
-                  {getInitials(user?.name || 'User')}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.bookingCount} bookings</p>
-              </div>
-            </div>
-          ) : (
-            <Button 
-              variant="outline" 
-              className="justify-start mb-4"
-              onClick={() => {
-                if (sidebarCloseRef.current) {
-                  sidebarCloseRef.current.click();
-                }
-                setShowSignInDialog(true);
-              }}
-            >
-              <User className="h-4 w-4 mr-3" />
-              Sign In
-            </Button>
-          )}
-          
-          
-          
-          <Button 
-            variant="ghost" 
-            className="justify-start"
-            onClick={() => {
-              if (sidebarCloseRef.current) {
-                sidebarCloseRef.current.click();
-              }
-              navigate('/profile');
-            }}
-          >
-            <User className="h-4 w-4 mr-3" />
-            Profile
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className="justify-start"
-            onClick={openParkingHistory}
-          >
-            <Clock className="h-4 w-4 mr-3" />
-            Parking History
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            className="justify-start"
-            onClick={openSavedParkings}
-          >
-            <Bookmark className="h-4 w-4 mr-3" />
-            Saved Parkings
-          </Button>
-
-          <Button 
-            variant="ghost" 
-            className="justify-start"
-            onClick={() => {
-              if (sidebarCloseRef.current) {
-                sidebarCloseRef.current.click();
-              }
-              navigate('/');
-            }}
-          >
-            <CircleParking className="h-4 w-4 mr-3" />
-            Find Parking
-          </Button>
-          
-          {isAuthenticated && (
-            <Button 
-              variant="ghost" 
-              className="justify-start text-red-500"
-              onClick={() => {
-                if (sidebarCloseRef.current) {
-                  sidebarCloseRef.current.click();
-                }
-                handleSignOut();
-              }}
-            >
-              Sign Out
-            </Button>
-          )}
-        </div>
-      </>
-    );
-  });
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center">
-        <Link to="/">
-          <h1 className="text-xl font-bold text-primary mr-2">ParKodo</h1>
-          {/* <span className="text-xs text-muted-foreground">beta</span> */}
-        </Link>
-      </div>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/" className="flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            <span className="font-bold text-lg">Parkodo</span>
+          </Link>
 
-      <div className="flex items-center gap-2">
-        {!isMobile && (
-          <div className="flex gap-2">
-            <ParkingHistory />
-            <SavedParkings />
-            
-            {!isAuthenticated && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-sm"
-                onClick={() => setShowSignInDialog(true)}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {isAuthenticated && user && (
+              <div className="hidden sm:flex items-center space-x-2">
+                <SavedParkings />
+                <ParkingHistory />
+              </div>
             )}
             
-            {isAuthenticated && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-sm"
-                onClick={() => navigate('/profile')}
-              >
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Button>
-            )}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+                  {isAuthenticated && user ? (
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={user.avatarUrl} alt={user.name} />
+                      <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <Settings className="h-5 w-5" />
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full max-w-sm">
+                <SheetHeader className="text-left pb-4">
+                  <SheetTitle>Account</SheetTitle>
+                </SheetHeader>
+
+                <div className="space-y-4">
+                  {isAuthenticated && user ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={user.avatarUrl} alt={user.name} />
+                          <AvatarFallback className="text-lg">{getInitials(user.name)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{user.name}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+
+                      <Separator />
+
+                      <div className="sm:hidden space-y-2">
+                        <SavedParkings />
+                        <ParkingHistory />
+                      </div>
+
+                      <nav className="space-y-1">
+                        <Link to="/profile" className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent">
+                          <User className="h-4 w-4 mr-2" /> Profile
+                        </Link>
+                        <Link to="/dashboard" className="flex items-center px-3 py-2 text-sm font-medium rounded-md hover:bg-accent">
+                          <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+                        </Link>
+                      </nav>
+
+                      <Separator />
+
+                      <Button variant="outline" className="w-full justify-start" onClick={signOut}>
+                        <LogOut className="h-4 w-4 mr-2" /> Sign Out
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Button 
+                        className="w-full justify-start" 
+                        onClick={() => setIsSignInOpen(true)}
+                      >
+                        <LogIn className="h-4 w-4 mr-2" /> Sign In
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start"
+                        onClick={() => setIsSignUpOpen(true)}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" /> Sign Up
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+
           </div>
-        )}
-        
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            {/* Use the component directly */}
-            <button 
-              ref={sidebarCloseRef} 
-              onClick={() => {}} // Will be handled by SheetClose
-              className="hidden" 
-              aria-label="Close sidebar"
-            />
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
+        </div>
       </div>
 
-      {/* Sign In Dialog */}
-      <Dialog open={showSignInDialog} onOpenChange={setShowSignInDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle>Sign In</DialogTitle>
-          <DialogDescription>Sign in to your account to continue</DialogDescription>
-          <SignInForm 
-            onSuccess={handleSignInSuccess}
-            onCancel={() => setShowSignInDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <SignInForm 
+        isOpen={isSignInOpen} 
+        onOpenChange={setIsSignInOpen} 
+        onSuccess={handleSignInSuccess} 
+        onSwitchToSignUp={() => {
+          setIsSignInOpen(false);
+          setIsSignUpOpen(true);
+        }}
+      />
+      
+      <SignUpForm 
+        isOpen={isSignUpOpen} 
+        onOpenChange={setIsSignUpOpen} 
+        onSuccess={handleSignUpSuccess}
+        onSwitchToSignIn={() => {
+          setIsSignUpOpen(false);
+          setIsSignInOpen(true);
+        }}
+      />
     </nav>
   );
 };
